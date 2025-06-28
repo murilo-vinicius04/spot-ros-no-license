@@ -1,11 +1,37 @@
-.idea
+# ROS 2 build artifacts
+build/
+install/
+log/
+
+# Python cache
+__pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
+*.so
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
 *.orig
-.vscode
-*/urdf/out*
-_build
-docs/source/*.rst
-build/*
-install/*
-log/*
+
+# Docker volumes
+.docker/
+
+# ROS logs
+*.log
+
+# Colcon artifacts
+COLCON_IGNORE

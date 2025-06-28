@@ -1,198 +1,264 @@
+# 🤖 Spot ROS2 Driver - License-Free Version
+
 <p align="center">
   <img src="spot.png" width="350">
-  <h1 align="center">Spot ROS 2</h1>
-  <p align="center">
-    <img src="https://img.shields.io/badge/python-3.10-blue"/>
-    <a href="https://github.com/astral-sh/ruff">
-      <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json"/>
-    </a>
-    <a href="https://github.com/psf/black">
-      <img src="https://img.shields.io/badge/code%20style-black-000000.svg"/>
-    </a>
-    <a href="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/ci.yml">
-      <img src="https://github.com/bdaiinstitute/spot_ros2/actions/workflows/ci.yml/badge.svg?branch=main"/>
-    </a>
-    <a href="https://coveralls.io/github/bdaiinstitute/spot_ros2?branch=main">
-      <img src="https://coveralls.io/repos/github/bdaiinstitute/spot_ros2/badge.svg?branch=main"/>
-    </a>
-    <a href="LICENSE">
-      <img src="https://img.shields.io/badge/license-MIT-purple"/>
-    </a>
-  </p>
+  <h1 align="center">Spot ROS 2 - Modified Driver</h1>
 </p>
 
-# Overview
-`spot_ros2` is a set of ROS 2 packages for interacting with Boston Dynamics' Spot, based off the [the ROS 1 equivalent](https://github.com/heuristicus/spot_ros).
-Its [`spot_driver`](spot_driver) package is designed to bridge the core functionality of the Spot SDK to ROS 2, and exposes topics, services, and actions necessary to control Spot and receive state information (such as images). 
-Currently, this repository corresponds to version 5.0.0 of the [spot-sdk](https://github.com/boston-dynamics/spot-sdk/releases/tag/v5.0.0).
+A modified version of the Boston Dynamics Spot ROS2 driver that **removes the streaming license requirement** for basic arm and body control functionality.
 
-## Requirements
-This repository is supported for use with Ubuntu 22.04 and [ROS 2 Humble](https://docs.ros.org/en/humble/index.html) on both ARM64 and AMD64 platforms.
+## 🎯 Key Features
 
-## Installation
-Set up your ROS 2 workspace, and clone the repository in the `src` directory:
+- ✅ **No Streaming License Required**: Works with basic Spot API (2Hz)
+- ✅ **Arm Control**: Full 6-DOF arm movement via high-level API
+- ✅ **ROS2 Control Integration**: Compatible with ros2_control ecosystem
+- ✅ **Complete State Feedback**: Joint states, IMU, contact sensors
+- ✅ **Docker Ready**: Complete containerized environment
+- ✅ **Easy Setup**: Clone, build, and run
+
+## 🚀 Quick Start
+
+### Option 1: Docker (Recommended)
+
+1. **Clone and Build**:
 ```bash
-mkdir -p <ROS workspace>/src && cd <ROS workspace>/src
-git clone https://github.com/bdaiinstitute/spot_ros2.git
+git clone <your-repo>
+cd spot_ws
+docker-compose up --build
 ```
-Then, initialize and install the submodules.
+
+2. **Enter Container**:
 ```bash
-cd spot_ros2
-git submodule init
-git submodule update
+docker exec -it spot_ws_spot-ros2_1 bash
+cd /workspaces/spot_ws
+source install/setup.bash
 ```
 
-Next, run the following script to install the necessary Boston Dynamics packages (both Python and C++) and ROS dependencies.
-The install script takes the optional argument ```--arm64```; it otherwise defaults to an AMD64 install.
+3. **Connect to Real Robot**:
 ```bash
+# Set environment variables
+export BOSDYN_CLIENT_USERNAME=your_username
+export BOSDYN_CLIENT_PASSWORD=your_password
+export SPOT_IP=YOUR_ROBOT_IP
+
+# Launch driver
+ros2 launch spot_driver spot_driver.launch.py \
+    launch_rviz:=true \
+    robot_description_package:=spot_description \
+    arm:=true
+```
+
+4. **Enable Control** (in another terminal):
+```bash
+# Stand up the robot
+ros2 service call /stand std_srvs/srv/Trigger
+
+# Launch ros2_control
+ros2 launch spot_ros2_control spot_ros2_control.launch.py hardware_interface:=robot
+```
+
+### Option 2: Native Installation
+
+1. **Install ROS2 Humble** (Ubuntu 22.04)
+
+2. **Clone and Build**:
+```bash
+mkdir -p ~/spot_ws && cd ~/spot_ws
+git clone https://github.com/murilo-vinicius04/spot-ros-no-license.git .
+git submodule update --init --recursive
+chmod +x install_spot_ros2.sh
 ./install_spot_ros2.sh
-or
-./install_spot_ros2.sh --arm64
-```
-From here, build and source your ROS 2 workspace.
-```bash
-cd <ROS workspace>
 colcon build --symlink-install
 source install/setup.bash
 ```
 
-### Alternative - Docker Image
+## 🎮 Robot Control
 
-Alternatively, a Dockerfile is available that prepares a ready-to-run ROS2 Humble install with the Spot driver installed.
-The Docker image can be built and minimally run with the following commands:
+### Basic Commands
+
 ```bash
-cd <ROS workspace>/src/spot_ros2
-docker build . -t spot_ros2
-docker run -it spot_ros2:latest
+# Robot commands
+ros2 service call /stand std_srvs/srv/Trigger
+ros2 service call /sit std_srvs/srv/Trigger
+
+# Arm commands
+ros2 service call /arm_stow std_srvs/srv/Trigger
+ros2 service call /arm_unstow std_srvs/srv/Trigger
 ```
 
-The following flags may be useful for extra functionality when running the image.
-| Flag     | Use             |
-| -------- | --------------- |
-| `--runtime nvidia` + `--gpus all`  | Use the [NVIDIA Container Runtime](https://developer.nvidia.com/container-runtime) to run the container with GPU acceleration |
-| `-e DISPLAY`  | Bind your display to the container in order to run GUI apps. Note that you will need to allow the Docker container to connect to your X11 server, which can be done in a number of ways ranging from disabling X11 authentication entirely, or by allowing the Docker daemon specifically to access your display server.  |
-| `--network host` | Use the host network directly. May help resolve issues connecting to Spot Wifi |
-| `--build-arg EXPERIMENTAL_ZENOH_RMW=TRUE` | Enable experimental rmw_zenoh middleware. May result in issues we cannot address. |
+### Advanced Joint Control
 
-### Experimental - RMW ZENOH Middleware
-
-**Disclaimer:** The RMW ZENOH middleware is now available for installation with the driver. Please note that this feature is currently under experimental testing and may result in issues that we cannot address. To use the zenoh implementation, please refer to the [rmw_zenoh documentation](https://github.com/ros2/rmw_zenoh).
-
-
-# Packages
-
-This repository consists of a series of ROS 2 packages for usage with Spot.
-Further documentation on how each of these packages can be used can be found in their resepective READMEs.
-
-* [`spot_driver`](spot_driver): Core driver for operating Spot. This contains all of the necessary topics, services, and actions for controlling Spot and receiving state information over ROS 2.
-  * The driver can be launched via the following command after building and sourcing your workspace. More details can be found on the [`spot_driver` README](spot_driver/README.md).
-    ```
-    ros2 launch spot_driver spot_driver.launch.py [config_file:=<path/to/config.yaml>] [spot_name:=<Spot Name>] [tf_prefix:=<TF Frame Prefix>] [launch_rviz:=<True|False>] [launch_image_publishers:=<True|False>] [publish_point_clouds:=<True|False>] [uncompress_images:=<True|False>] [publish_compressed_images:=<True|False>] [stitch_front_images:=<True|False>]
-    ```
-* [`spot_examples`](spot_examples): Examples of how to control Spot via the Spot driver.
-* [`spot_msgs`](spot_msgs): Custom messages, services, and interfaces relevant for operating Spot.
-* [`spot_common`](spot_common): Common utilities for several packages in the Spot ROS 2 stack.
-
-The following packages are used to enable joint level control of Spot via ROS 2 control.
-* [`spot_ros2_control`](spot_ros2_control): Contains core launchfiles for bringing up Spot's ROS 2 control stack, and some examples of how to use this.
-* [`spot_hardware_interface`](spot_hardware_interface): Creates a ROS 2 control hardware interface plugin for operating Spot with the joint level API.
-* [`spot_controllers`](spot_controllers): Holds some simple forwarding controller plugins useful for sending commands.
-
-This package also pulls in the following packages as submodules:
-* [`ros_utilities`](https://github.com/bdaiinstitute/ros_utilities): The RAI Institute's convenience wrappers around ROS 2.
-* [`spot_wrapper`](https://github.com/bdaiinstitute/spot_wrapper): A Python wrapper around the Spot SDK, shared as a common entry point with Spot's ROS 1 repo.
-* [`spot_description`](https://github.com/bdaiinstitute/spot_description): contains the URDF of Spot and some simple launchfiles for visualization.
-
-This repository also depends on the `bosdyn_msgs` ROS package.
-This package contains ROS versions of [Boston Dynamics' protobufs](https://dev.bostondynamics.com/protos/bosdyn/api/proto_reference) that are used with the Spot SDK.
-As it is very large, this is installed as a debian package as part of `install_spot_ros2.sh`.
-It can be installed from source as a normal ROS package [here](https://github.com/bdaiinstitute/bosdyn_msgs) if desired instead.
-
-
-# Help
-
-If you encounter problems when using this repository, feel free to ask a question in the [discussions](https://github.com/bdaiinstitute/spot_ros2/discussions), or open an [issue](https://github.com/bdaiinstitute/spot_ros2/issues) describing the problem in context.
-
-## Verify Package Versions
-If you encounter `ModuleNotFoundErrors` with `bosdyn` packages upon running the driver, it is likely that the necessary Boston Dynamics API packages did not get installed with `install_spot_ros2.sh`. To check this, you can run the following command. Note that all versions should be `5.0.0`.
 ```bash
-$ pip list | grep bosdyn
-bosdyn-api                               5.0.0
-bosdyn-api-msgs                          5.0.0
-bosdyn-auto-return-api-msgs              5.0.0
-bosdyn-autowalk-api-msgs                 5.0.0
-bosdyn-choreography-client               5.0.0
-bosdyn-client                            5.0.0
-bosdyn-core                              5.0.0
-bosdyn-graph-nav-api-msgs                5.0.0
-bosdyn-keepalive-api-msgs                5.0.0
-bosdyn-log-status-api-msgs               5.0.0
-bosdyn-metrics-logging-api-msgs          5.0.0
-bosdyn-mission                           5.0.0
-bosdyn-mission-api-msgs                  5.0.0
-bosdyn-msgs                              5.0.0
-bosdyn-spot-api-msgs                     5.0.0
-bosdyn-spot-cam-api-msgs                 5.0.0
+# Full robot position command (19 joints: 12 legs + 7 arm)
+ros2 topic pub --once /forward_position_controller/commands std_msgs/msg/Float64MultiArray \
+'{data: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, -0.3, 0.8, 0.0, 0.3, 0.0, 0.0]}'
 ```
-If these packages were not installed correctly on your system, you can try manually installing them following [Boston Dynamics' guide](https://dev.bostondynamics.com/docs/python/quickstart#install-spot-python-packages).
 
-The above command verifies the installation of the `bosdyn` packages from Boston Dynamics and the generated protobuf to ROS messages in the `bosdyn_msgs` package (these have `msgs` in the name). You can also verify the `bosdyn_msgs` installation was correct with the following command:
+### Environment Setup
+
 ```bash
-$ ros2 pkg xml bosdyn_msgs -t version
-5.0.0
+# Set environment variables for your robot
+export BOSDYN_CLIENT_USERNAME="your_username"      # Default: admin
+export BOSDYN_CLIENT_PASSWORD="your_password"      # Default: <your_robot_password>
+export SPOT_IP="YOUR_ROBOT_IP"                     # Example: 192.168.80.3
+export SPOT_PORT="443"                             # Optional, defaults to 443
 ```
 
-Finally, you can verify the installation of the `spot-cpp-sdk` with the following command:
-```
-$ dpkg -l spot-cpp-sdk
-||/ Name           Version      Architecture Description
-+++-==============-============-============-=================================
-ii  spot-cpp-sdk   5.0.0        amd64        Boston Dynamics Spot C++ SDK
-```
+**Note**: Replace the placeholder values with your actual robot credentials and IP address.
 
-# License
+## 🛠️ System Architecture
 
-This repository has the BSD3 license for the parts of the code derived from the Clearpath Robotics ROS 1 driver and the MIT license for the parts of the code developed specifically for ROS 2.
+### Core Packages
 
-# Contributing
-Code contributions are welcome in this repository!
+| Package | Description |
+|---------|-------------|
+| `spot_driver` | Main driver for Spot communication |
+| `spot_hardware_interface` | **Modified** hardware interface (license-free) |
+| `spot_ros2_control` | ROS2 control integration |
+| `spot_controllers` | Custom controllers |
+| `spot_msgs` | Custom message definitions |
+| `spot_description` | Robot URDF and visualization |
 
+### Modified Components
 
-To contribute:
-* Fork this repository, and follow the installation steps
-* Install the pre-commit hooks:
+The key modification is in `spot_hardware_interface.cpp`:
+
+- **Replaced streaming API** (requires license) with **basic API** (2Hz)
+- **High-level arm commands** using protobuf messages
+- **State polling** instead of streaming for joint feedback
+- **Rate limiting** to comply with basic API restrictions
+
+## ⚙️ Configuration
+
+### Robot Connection
+
+Set environment variables:
+
 ```bash
-cd <ROS workspace>/src/spot_ros2
-pip install pre-commit
-pre-commit install
-pre-commit run --all-files
+# Configure robot connection
+export BOSDYN_CLIENT_USERNAME="your_username"      # Default: admin  
+export BOSDYN_CLIENT_PASSWORD="your_password"      # Default: <your_robot_password>
+export SPOT_IP="YOUR_ROBOT_IP"                     # Example: 192.168.80.3
+export SPOT_PORT="443"                             # Optional, defaults to 443
 ```
-* Make the intended changes, and open a pull request against this repository. In the pull request description, you will need to specify what change is being made and why, and how it was tested.
 
-## Contributors
+### Joint Ordering
 
-This project is a collaboration between the [Mobile Autonomous Systems & Cognitive Robotics Institute](https://maskor.fh-aachen.de/en/) (MASKOR) at [FH Aachen](https://www.fh-aachen.de/en/) and the [RAI Institute](https://rai-inst.com/).
+```
+Legs [0-11]:   FL_hip_x, FL_hip_y, FL_knee,    # Front Left
+               FR_hip_x, FR_hip_y, FR_knee,    # Front Right
+               RL_hip_x, RL_hip_y, RL_knee,    # Rear Left
+               RR_hip_x, RR_hip_y, RR_knee     # Rear Right
 
-MASKOR contributors:
+Arm [12-18]:   sh0, sh1, el0, el1, wr0, wr1, f1x
+```
 
-* Maximillian Kirsch
-* Shubham Pawar
-* Christoph Gollok
-* Stefan Schiffer
-* Alexander Ferrein
+## 🔄 Simulation Mode
 
-RAI Institute contributors:
+For development without a real robot:
 
-* Jenny Barry
-* Daniel Gonzalez
-* Tao Pang
-* David Surovik
-* Jiuguang Wang
-* David Watkins
-* Andrew Messing
-* Tiffany Cappellari
-* Katie Hughes
+```bash
+# Mock mode with full robot simulation
+ros2 launch spot_ros2_control spot_ros2_control.launch.py \
+    hardware_interface:=mock \
+    mock_arm:=true \
+    launch_rviz:=true
+```
 
-[Linköping University](https://liu.se/en/organisation/liu/ida) contributors:
+## 📊 API Differences
 
-* Tommy Persson
+| Feature | Streaming API (Licensed) | Basic API (License-Free) |
+|---------|-------------------------|--------------------------|
+| **Frequency** | 50Hz | 2Hz |
+| **Latency** | ~20ms | ~500ms |
+| **Movement** | Smooth interpolation | Step-wise |
+| **Cost** | Requires license | Free |
+| **Use Case** | Production | Development/Education |
+
+## 🚨 Troubleshooting
+
+### Connection Issues
+
+```bash
+# Check robot connectivity
+ping $SPOT_IP
+
+# Verify robot status
+curl -k -u $BOSDYN_CLIENT_USERNAME:$BOSDYN_CLIENT_PASSWORD https://$SPOT_IP:443/api/v1/status
+```
+
+### Common Problems
+
+1. **Robot not responding**: Check network connection and credentials
+2. **Movements are jerky**: Expected with 2Hz API, normal behavior
+3. **Commands rejected**: Some extreme positions filtered by safety systems
+4. **Container issues**: Restart with `docker-compose restart`
+
+### Diagnostic Commands
+
+```bash
+# Check robot connectivity
+ping $SPOT_IP
+
+# Verify robot status via API
+curl -k -u $BOSDYN_CLIENT_USERNAME:$BOSDYN_CLIENT_PASSWORD https://$SPOT_IP:443/api/v1/status
+```
+
+## 📋 Requirements
+
+- **OS**: Ubuntu 22.04
+- **ROS**: ROS2 Humble
+- **Python**: 3.10+
+- **Network**: Connection to Spot robot
+- **Hardware**: Any x86_64 or ARM64 system
+
+## 🔧 Development
+
+### Building Changes
+
+```bash
+# After modifying code
+cd ~/spot_ws
+colcon build --packages-select spot_hardware_interface
+source install/setup.bash
+```
+
+### Adding New Features
+
+The main modification points:
+- `src/spot_ros2/spot_hardware_interface/src/spot_hardware_interface.cpp`
+- Functions: `send_arm_command_basic()`, `basic_state_loop()`
+
+## 📄 License
+
+This project maintains the original licensing:
+- **BSD3**: Parts derived from Clearpath Robotics ROS1 driver
+- **MIT**: ROS2-specific developments
+
+## 🤝 Contributing
+
+1. Fork this repository
+2. Create feature branch
+3. Test with both simulation and real robot
+4. Submit pull request with detailed description
+
+## ⚠️ Important Notes
+
+- **2Hz Limitation**: This version operates at 2Hz maximum due to basic API constraints
+- **Production Use**: For production applications requiring smooth movement, consider the streaming license
+- **Safety**: Always test in simulation first, use e-stop when available
+- **Network**: Stable network connection essential for real robot operation
+
+## 📞 Support
+
+For issues with this modified driver:
+1. Check troubleshooting section
+2. Verify robot connectivity with diagnostic scripts
+3. Test in simulation mode first
+4. Review logs with `ros2 node list` and `ros2 topic list`
+
+---
+
+**🎯 Summary**: Clone → Build → Connect → Control
+**🛡️ Safety First**: Always test in simulation before real robot use
+**💡 Development**: Perfect for learning and prototyping without license costs 

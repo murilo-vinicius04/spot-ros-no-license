@@ -1,14 +1,20 @@
 services:
-  spot-ros2-driver:
-    image: spot_ros2:latest
+  spot-ros2:
+    build: .
     volumes:
-      - ./spot_driver/config/spot_ros_example.yaml:/ros_ws/src/robot.yaml
+      - .:/workspaces/spot_ws
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    working_dir: /workspaces/spot_ws
     environment:
-      - SPOT_NAME=${SPOT_NAME:-spot}
-      # Default value, can be set via CLI with >>SPOT_NAME=spot docker compose up<<
+      - SPOT_NAME=${SPOT_NAME:-Spot}
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
     command: >
       bash -c "
         source /opt/ros/humble/setup.bash && 
-        source /ros_ws/install/setup.bash && 
-        ros2 launch spot_driver spot_driver.launch.py config_file:=/ros_ws/src/robot.yaml spot_name:=$${SPOT_NAME} launch_rviz:=False
+        echo '🎉 Container pronto! Executando comandos manualmente...' &&
+        exec bash
       "
+    stdin_open: true
+    tty: true
+    network_mode: host
