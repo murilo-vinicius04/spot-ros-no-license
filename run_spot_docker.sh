@@ -47,6 +47,9 @@ run_container() {
         --env="DISPLAY=$DISPLAY" \
         --env="QT_X11_NO_MITSHM=1" \
         --env="XAUTHORITY=$XAUTH" \
+        --env="BOSDYN_CLIENT_USERNAME=${BOSDYN_CLIENT_USERNAME:-admin}" \
+        --env="BOSDYN_CLIENT_PASSWORD=${BOSDYN_CLIENT_PASSWORD:-your_password}" \
+        --env="SPOT_IP=${SPOT_IP:-192.168.80.3}" \
         --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
         --volume="$PWD:/workspaces/spot_ws:rw" \
         --volume="/dev:/dev:rw" \
@@ -59,6 +62,9 @@ run_container() {
         --privileged \
         --env="DISPLAY=$DISPLAY" \
         --env="QT_X11_NO_MITSHM=1" \
+        --env="BOSDYN_CLIENT_USERNAME=${BOSDYN_CLIENT_USERNAME:-admin}" \
+        --env="BOSDYN_CLIENT_PASSWORD=${BOSDYN_CLIENT_PASSWORD:-your_password}" \
+        --env="SPOT_IP=${SPOT_IP:-192.168.80.3}" \
         --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
         --volume="$PWD:/workspaces/spot_ws:rw" \
         --volume="/dev:/dev:rw" \
