@@ -22,7 +22,7 @@ A modified version of the Boston Dynamics Spot ROS2 driver that **removes the st
 
 1. **Clone and Build**:
 ```bash
-git clone <your-repo>
+git clone --recursive https://github.com/murilo-vinicius04/spot-ros-no-license.git spot_ws
 cd spot_ws
 docker-compose up --build
 ```
@@ -64,8 +64,7 @@ ros2 launch spot_ros2_control spot_ros2_control.launch.py hardware_interface:=ro
 2. **Clone and Build**:
 ```bash
 mkdir -p ~/spot_ws && cd ~/spot_ws
-git clone https://github.com/murilo-vinicius04/spot-ros-no-license.git .
-git submodule update --init --recursive
+git clone --recursive https://github.com/murilo-vinicius04/spot-ros-no-license.git .
 chmod +x install_spot_ros2.sh
 ./install_spot_ros2.sh
 colcon build --symlink-install
