@@ -20,6 +20,12 @@ A modified version of the Boston Dynamics Spot ROS2 driver that **removes the st
 
 ### Option 1: Docker (Recommended)
 
+**Features:**
+- ✅ **GUI Support**: X11 forwarding for RViz and GUI applications
+- ✅ **GPU Access**: Hardware acceleration for graphics
+- ✅ **One-Click Launch**: Pre-configured commands for common tasks
+- ✅ **Auto-Build**: Automatically builds/updates container
+
 1. **Clone and Build**:
 ```bash
 git clone --recursive https://github.com/murilo-vinicius04/spot-ros-no-license.git spot_ws
@@ -27,34 +33,33 @@ cd spot_ws
 docker-compose up --build
 ```
 
-2. **Enter Container**:
+2. **Set Environment Variables**:
 ```bash
-docker exec -it spot_ws_spot-ros2_1 bash
-cd /workspaces/spot_ws
-source install/setup.bash
-```
-
-3. **Connect to Real Robot**:
-```bash
-# Set environment variables
+# Configure robot connection
 export BOSDYN_CLIENT_USERNAME=your_username
 export BOSDYN_CLIENT_PASSWORD=your_password
 export SPOT_IP=YOUR_ROBOT_IP
-
-# Launch driver
-ros2 launch spot_driver spot_driver.launch.py \
-    launch_rviz:=true \
-    robot_description_package:=spot_description \
-    arm:=true
 ```
 
-4. **Enable Control** (in another terminal):
+3. **Run with GUI Support**:
 ```bash
-# Stand up the robot
-ros2 service call /stand std_srvs/srv/Trigger
+# Interactive shell with RViz support
+./run_spot_docker.sh shell
 
-# Launch ros2_control
-ros2 launch spot_ros2_control spot_ros2_control.launch.py hardware_interface:=robot
+# Or launch directly:
+./run_spot_docker.sh driver    # Launch driver with RViz
+./run_spot_docker.sh control   # Launch ros2_control
+./run_spot_docker.sh mock      # Mock simulation with RViz
+./run_spot_docker.sh rviz      # RViz only
+./run_spot_docker.sh build     # Build workspace
+```
+
+4. **Available Commands**:
+```bash
+# Inside container - robot commands
+ros2 service call /stand std_srvs/srv/Trigger
+ros2 service call /sit std_srvs/srv/Trigger
+ros2 service call /arm_stow std_srvs/srv/Trigger
 ```
 
 ### Option 2: Native Installation
@@ -193,6 +198,32 @@ curl -k -u $BOSDYN_CLIENT_USERNAME:$BOSDYN_CLIENT_PASSWORD https://$SPOT_IP:443/
 3. **Commands rejected**: Some extreme positions filtered by safety systems
 4. **Container issues**: Restart with `docker-compose restart`
 
+### Docker GUI Issues
+
+1. **RViz won't start**: 
+   ```bash
+   # Check X11 forwarding
+   echo $DISPLAY
+   xhost +local:docker
+   ```
+
+2. **Permission denied on /tmp/.X11-unix**:
+   ```bash
+   sudo chmod 755 /tmp/.X11-unix
+   ```
+
+3. **GPU not detected**:
+   ```bash
+   # Check GPU support
+   nvidia-smi  # For NVIDIA
+   # Install nvidia-docker2 if needed
+   ```
+
+4. **Script permission denied**:
+   ```bash
+   chmod +x run_spot_docker.sh
+   ```
+
 ### Diagnostic Commands
 
 ```bash
@@ -205,11 +236,23 @@ curl -k -u $BOSDYN_CLIENT_USERNAME:$BOSDYN_CLIENT_PASSWORD https://$SPOT_IP:443/
 
 ## 📋 Requirements
 
-- **OS**: Ubuntu 22.04
+- **OS**: Ubuntu 22.04 (or compatible Linux with X11)
 - **ROS**: ROS2 Humble
 - **Python**: 3.10+
 - **Network**: Connection to Spot robot
 - **Hardware**: Any x86_64 or ARM64 system
+
+### GUI Requirements (for Docker)
+- **X11 Server**: For RViz and GUI applications
+- **GPU Drivers**: NVIDIA/AMD drivers for hardware acceleration
+- **Docker**: Version 20.10+ with GPU support (optional)
+- **xhost**: For X11 forwarding permissions
+
+```bash
+# Install GUI requirements (Ubuntu)
+sudo apt update
+sudo apt install x11-xserver-utils mesa-utils
+```
 
 ## 🔧 Development
 

@@ -1,0 +1,37 @@
+# Example configuration for Spot ROS2 Driver (License-Free Version)
+# Copy this file and modify the connection parameters for your robot
+
+/**:
+  ros__parameters:
+    # === CONNECTION SETTINGS ===
+    hostname: "192.168.80.3"
+    username: "admin"
+    password: "spotadmin2017" 
+    port: 443
+    certificate: ""
+
+    # === DRIVER SETTINGS ===
+    metrics_rate: 0.04
+    lease_rate: 1.0
+    auto_claim: true
+    auto_power_on: false
+    auto_stand: false
+    
+    # === COMMAND SETTINGS ===
+    estop_timeout: 9.0
+    start_estop: false
+    cmd_duration: 0.25
+    
+    # === COORDINATE FRAMES ===
+    preferred_odom_frame: "odom"
+    tf_root: "odom"
+    spot_name: ""
+    
+    # === SENSORS & CAMERAS ===
+    rgb_cameras: true
+    initialize_spot_cam: false
+    
+    # === ARM SETTINGS (if robot has arm) ===
+    gripperless: false
+    publish_arm_state: true
+    arm_enabled: true 
