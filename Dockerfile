@@ -41,6 +41,13 @@ RUN apt-get update -q && \
     python3-tk \
     ros-humble-ros-base \
     ros-dev-tools \
+    # MoveIt and Gazebo dependencies
+    ros-humble-moveit \
+    ros-humble-moveit-setup-assistant \
+    ros-humble-moveit-servo \
+    ros-humble-moveit-visual-tools \
+    ros-humble-gazebo-ros-pkgs \
+    ros-humble-gazebo-ros2-control \
     #check if Zenoh should be installed
     $(if [ "$EXPERIMENTAL_ZENOH_RMW" = "TRUE" ]; then echo "ros-humble-rmw-zenoh-cpp"; fi) \
     && rm -rf /var/lib/apt/lists/*
@@ -62,3 +69,16 @@ RUN ARCH=$(dpkg --print-architecture) && echo "Building driver with $ARCH" && /r
 WORKDIR /ros_ws/
 RUN . /opt/ros/humble/setup.sh && \
     colcon build --symlink-install
+
+# Set up workspace directory
+RUN mkdir -p /home/spot_ws
+
+# Set working directory
+WORKDIR /home/spot_ws
+
+# Set environment variables
+ENV HOME=/home/spot_ws
+ENV USER=root
+
+# Set default command
+CMD ["/bin/bash"]

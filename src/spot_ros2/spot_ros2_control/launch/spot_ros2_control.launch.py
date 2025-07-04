@@ -162,7 +162,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                         "imu_sensor_broadcaster",
                         "foot_state_broadcaster",
                         "spot_pose_broadcaster",
-                        LaunchConfiguration("robot_controller"),
+                        "forward_position_controller",
+                        "arm_controller",
+                        "gripper_controller",
                     ],
                     namespace=spot_name,
                 )

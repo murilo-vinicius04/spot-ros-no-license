@@ -18,6 +18,10 @@
         type: spot_controllers/SpotJointController
       spot_pose_broadcaster:
         type: spot_controllers/SpotPoseBroadcaster
+      arm_controller:
+        type: joint_trajectory_controller/JointTrajectoryController
+      gripper_controller:
+        type: joint_trajectory_controller/JointTrajectoryController
       hardware_components_initial_state:
         unconfigured:
         - SpotSystem
@@ -36,13 +40,6 @@
         - rear_right_hip_x
         - rear_right_hip_y
         - rear_right_knee
-        - arm_sh0
-        - arm_sh1
-        - arm_el0
-        - arm_el1
-        - arm_wr0
-        - arm_wr1
-        - arm_f1x
       interface_names:
         - position
   forward_state_controller:
@@ -60,13 +57,6 @@
         - rear_right_hip_x
         - rear_right_hip_y
         - rear_right_knee
-        - arm_sh0
-        - arm_sh1
-        - arm_el0
-        - arm_el1
-        - arm_wr0
-        - arm_wr1
-        - arm_f1x
       interface_names:
         - position
         - velocity
@@ -86,10 +76,61 @@
         - rear_right_hip_x
         - rear_right_hip_y
         - rear_right_knee
+
+  arm_controller:
+    ros__parameters:
+      joints:
         - arm_sh0
         - arm_sh1
         - arm_el0
         - arm_el1
         - arm_wr0
         - arm_wr1
+      command_interfaces:
+        - position
+      state_interfaces:
+        - position
+        - velocity
+      state_publish_rate: 50.0
+      action_monitor_rate: 20.0
+      allow_partial_joints_goal: false
+      constraints:
+        stopped_velocity_tolerance: 0.01
+        goal_time: 0.6
+        arm_sh0:
+          trajectory: 0.1
+          goal: 0.1
+        arm_sh1:
+          trajectory: 0.1
+          goal: 0.1
+        arm_el0:
+          trajectory: 0.1
+          goal: 0.1
+        arm_el1:
+          trajectory: 0.1
+          goal: 0.1
+        arm_wr0:
+          trajectory: 0.1
+          goal: 0.1
+        arm_wr1:
+          trajectory: 0.1
+          goal: 0.1
+
+  gripper_controller:
+    ros__parameters:
+      joints:
         - arm_f1x
+      command_interfaces:
+        - position
+      state_interfaces:
+        - position
+        - velocity
+      state_publish_rate: 50.0
+      action_monitor_rate: 20.0
+      allow_partial_joints_goal: false
+      constraints:
+        stopped_velocity_tolerance: 0.01
+        goal_time: 0.6
+        arm_f1x:
+          trajectory: 0.05
+          goal: 0.05

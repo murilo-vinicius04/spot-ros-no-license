@@ -4,7 +4,7 @@ import os
 
 from launch import LaunchContext, LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 from launch_ros.actions import Node
@@ -80,6 +80,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     )
     ld.add_action(spot_driver_node)
 
+    # Note: lease_manager_node is NOT launched when controllable=true
+    # The ros2_control hardware interface manages the lease directly
     spot_lease_manager_node = Node(
         package="spot_driver",
         executable="lease_manager_node",
@@ -87,7 +89,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         output="screen",
         parameters=[configured_params],
         namespace=spot_name,
-        condition=IfCondition(LaunchConfiguration("controllable")),
+        condition=UnlessCondition(LaunchConfiguration("controllable")),  # Only launch when NOT controllable
     )
     ld.add_action(spot_lease_manager_node)
 
@@ -181,16 +183,16 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             PathJoinSubstitution([FindPackageShare("spot_ros2_control"), "launch", "spot_ros2_control.launch.py"])
         ),
         launch_arguments={
-            "launch_rviz": LaunchConfiguration("launch_rviz"),
+            "launch_rviz": "False",  # Let spot_driver handle RViz
             "config_file": LaunchConfiguration("config_file"),
             "controllers_config": LaunchConfiguration("controllers_config"),
             "spot_name": LaunchConfiguration("spot_name"),
             "hardware_interface": "mock" if mock_enable else "robot",
             "mock_arm": str(mock_enable and has_arm),
             "launch_image_publishers": "False",
-            "leasing_mode": "proxied",
+            "leasing_mode": "direct",  # Fixed: Use direct leasing instead of proxied
             "control_only": "True",
-            "auto_start": "False",
+            "auto_start": "True",  # Fixed: Auto start controllers
         }.items(),
         condition=IfCondition(LaunchConfiguration("controllable")),
     )

@@ -142,7 +142,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             output="both",
             parameters=[robot_description, controllers_config],
             namespace=spot_name,
-            remappings=[(f"/{tf_prefix}joint_states", f"/{tf_prefix}low_level/joint_states")],
         )
     )
 
@@ -153,7 +152,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             output="both",
             parameters=[robot_description, {"ignore_timestamp": True}],
             namespace=spot_name,
-            remappings=[(f"/{tf_prefix}joint_states", f"/{tf_prefix}low_level/joint_states")],
             condition=UnlessCondition(LaunchConfiguration("control_only")),
         )
     )
@@ -175,7 +173,9 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                         "imu_sensor_broadcaster", 
                         "foot_state_broadcaster",
                         "spot_pose_broadcaster",
-                        "forward_position_controller",  # Enable arm controller
+                        "forward_position_controller",
+                        "arm_controller",
+                        "gripper_controller",
                     ],
                     namespace=spot_name,
                 )

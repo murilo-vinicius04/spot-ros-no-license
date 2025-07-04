@@ -915,7 +915,7 @@ void SpotHardware::send_command(const JointCommands& joint_commands) {
   auto current_time = std::chrono::steady_clock::now();
   auto time_since_last = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_command_time);
   
-  if (time_since_last < std::chrono::milliseconds(500)) { // 2Hz max
+  if (time_since_last < std::chrono::milliseconds(100)) { // 2Hz max
     return;
   }
   last_command_time = current_time;

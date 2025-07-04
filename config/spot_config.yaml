@@ -1,0 +1,37 @@
+/**:
+  ros__parameters:
+    # Spot Login Information
+    username: "admin"  # Substitua pelo seu usuário correto
+    password: "spotadmin2017"  # Substitua pela senha correta do seu Spot
+    hostname: "192.168.80.3"  # Substitua pelo IP correto do seu Spot
+
+    # Status Updates from Spot
+    metrics_rate: 0.04
+    lease_rate: 1.0
+    async_tasks_rate: 10.0
+
+    # Some boolean parameters
+    auto_claim: False
+    auto_power_on: False
+    auto_stand: False
+
+    # Estop Parameters
+    estop_timeout: 9.0
+    start_estop: False
+
+    preferred_odom_frame: "odom"
+    tf_root: "odom"
+
+    # These parameters may be overridden by the 'spot_name' and 'tf_prefix' launch arguments.
+    spot_name: "Spot"
+    # frame_prefix: ""
+
+    cmd_duration: 0.25
+    rgb_cameras: True
+    initialize_spot_cam: False
+
+    use_velodyne: False
+    velodyne_rate: 10.0
+
+    # Change to True if missing gripper on arm
+    gripperless: False 
