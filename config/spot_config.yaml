@@ -22,8 +22,6 @@
     preferred_odom_frame: "odom"
     tf_root: "odom"
 
-    # These parameters may be overridden by the 'spot_name' and 'tf_prefix' launch arguments.
-    spot_name: "Spot"
     # frame_prefix: ""
 
     cmd_duration: 0.25

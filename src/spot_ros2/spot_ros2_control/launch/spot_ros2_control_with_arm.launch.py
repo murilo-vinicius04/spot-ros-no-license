@@ -83,7 +83,7 @@ def create_rviz_config_with_arm(spot_name: str) -> str:
 def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
     hardware_interface: str = LaunchConfiguration("hardware_interface").perform(context)
     controllers_config: str = LaunchConfiguration("controllers_config").perform(context)
-    spot_name: str = LaunchConfiguration("spot_name").perform(context)
+    spot_name = ""  # Fixando spot_name como string vazia
     config_file: str = LaunchConfiguration("config_file").perform(context)
 
     # Force arm to be True for this launch file
@@ -107,7 +107,7 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             k_qd_p = " ".join(map(str, param_dict["k_qd_p"]))
             gain_params += f' k_qd_p:="{k_qd_p}" '
 
-    tf_prefix = f"{spot_name}/" if spot_name else ""
+    tf_prefix = ""  # Zerar o tf_prefix
 
     # Generate the robot description with ARM ENABLED
     robot_urdf = Command(
@@ -133,6 +133,8 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
         controllers_config = os.path.join(
             get_package_share_directory(THIS_PACKAGE), "config", "spot_default_controllers_with_arm.yaml"
         )
+    
+    print(f"\n🔍 Arquivo de controladores usado: {controllers_config}\n")
 
     # Add nodes
     ld.add_action(
@@ -141,7 +143,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             executable="ros2_control_node",
             output="both",
             parameters=[robot_description, controllers_config],
-            namespace=spot_name,
         )
     )
 
@@ -151,7 +152,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             executable="robot_state_publisher",
             output="both",
             parameters=[robot_description, {"ignore_timestamp": True}],
-            namespace=spot_name,
             condition=UnlessCondition(LaunchConfiguration("control_only")),
         )
     )
@@ -161,7 +161,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             package="controller_manager",
             executable="hardware_spawner",
             arguments=["-c", "controller_manager", "--activate", "SpotSystem"],
-            namespace=spot_name,
             on_exit=[
                 Node(
                     package="controller_manager",
@@ -177,7 +176,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
                         "arm_controller",
                         "gripper_controller",
                     ],
-                    namespace=spot_name,
                 )
             ],
             condition=IfCondition(LaunchConfiguration("auto_start")),
@@ -193,7 +191,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             output="log",
             arguments=["-d", create_rviz_config_with_arm(spot_name)],
             condition=IfCondition(LaunchConfiguration("launch_rviz")),
-            namespace=spot_name,
         )
     )
 
@@ -205,7 +202,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             name="joint_state_publisher_gui",
             output="screen",
             condition=IfCondition(LaunchConfiguration("launch_gui")),
-            namespace=spot_name,
             remappings=[("joint_states", f"/{tf_prefix}joint_command")],
         )
     )
@@ -218,7 +214,6 @@ def launch_setup(context: LaunchContext, ld: LaunchDescription) -> None:
             name="rqt_joint_trajectory_controller",
             output="screen",
             condition=IfCondition(LaunchConfiguration("launch_rqt")),
-            namespace=spot_name,
         )
     )
 

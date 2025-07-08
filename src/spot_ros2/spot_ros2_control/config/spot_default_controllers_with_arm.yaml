@@ -1,9 +1,10 @@
 # Copyright (c) 2024-2025 Boston Dynamics AI Institute LLC. All rights reserved.
-
 /**:
   controller_manager:
     ros__parameters:
       update_rate: 333
+
+      # 1. DEFINIÇÃO DOS TIPOS DE CONTROLADORES
       foot_state_broadcaster:
         type: spot_controllers/FootStateBroadcaster
       forward_position_controller:
@@ -20,62 +21,12 @@
         type: spot_controllers/SpotPoseBroadcaster
       arm_controller:
         type: joint_trajectory_controller/JointTrajectoryController
-      gripper_controller:
-        type: joint_trajectory_controller/JointTrajectoryController
+
       hardware_components_initial_state:
         unconfigured:
         - SpotSystem
-  forward_position_controller:
-    ros__parameters:
-      joints:
-        - front_left_hip_x
-        - front_left_hip_y
-        - front_left_knee
-        - front_right_hip_x
-        - front_right_hip_y
-        - front_right_knee
-        - rear_left_hip_x
-        - rear_left_hip_y
-        - rear_left_knee
-        - rear_right_hip_x
-        - rear_right_hip_y
-        - rear_right_knee
-      interface_names:
-        - position
-  forward_state_controller:
-    ros__parameters:
-      joints:
-        - front_left_hip_x
-        - front_left_hip_y
-        - front_left_knee
-        - front_right_hip_x
-        - front_right_hip_y
-        - front_right_knee
-        - rear_left_hip_x
-        - rear_left_hip_y
-        - rear_left_knee
-        - rear_right_hip_x
-        - rear_right_hip_y
-        - rear_right_knee
-      interface_names:
-        - position
-        - velocity
-        - effort
-  spot_joint_controller:
-    ros__parameters:
-      joints:
-        - front_left_hip_x
-        - front_left_hip_y
-        - front_left_knee
-        - front_right_hip_x
-        - front_right_hip_y
-        - front_right_knee
-        - rear_left_hip_x
-        - rear_left_hip_y
-        - rear_left_knee
-        - rear_right_hip_x
-        - rear_right_hip_y
-        - rear_right_knee
+
+  # 2. PARÂMETROS ESPECÍFICOS DE CADA CONTROLADOR
 
   arm_controller:
     ros__parameters:
@@ -91,46 +42,78 @@
       state_interfaces:
         - position
         - velocity
-      state_publish_rate: 50.0
       action_monitor_rate: 20.0
-      allow_partial_joints_goal: false
+      allow_partial_joints_goal: true
+      stop_trajectory_duration: 0.5
       constraints:
-        stopped_velocity_tolerance: 0.01
-        goal_time: 0.6
-        arm_sh0:
-          trajectory: 0.1
-          goal: 0.1
-        arm_sh1:
-          trajectory: 0.1
-          goal: 0.1
-        arm_el0:
-          trajectory: 0.1
-          goal: 0.1
-        arm_el1:
-          trajectory: 0.1
-          goal: 0.1
-        arm_wr0:
-          trajectory: 0.1
-          goal: 0.1
-        arm_wr1:
-          trajectory: 0.1
-          goal: 0.1
+        goal_time: 0.0
+        arm_sh0: { goal: 0.1 }
+        arm_sh1: { goal: 0.1 }
+        arm_el0: { goal: 0.1 }
+        arm_el1: { goal: 0.1 }
+        arm_wr0: { goal: 0.1 }
+        arm_wr1: { goal: 0.1 }
 
-  gripper_controller:
+  forward_position_controller:
     ros__parameters:
       joints:
+        - front_left_hip_x
+        - front_left_hip_y
+        - front_left_knee
+        - front_right_hip_x
+        - front_right_hip_y
+        - front_right_knee
+        - rear_left_hip_x
+        - rear_left_hip_y
+        - rear_left_knee
+        - rear_right_hip_x
+        - rear_right_hip_y
+        - rear_right_knee
         - arm_f1x
-      command_interfaces:
+      interface_names:
         - position
-      state_interfaces:
+
+  forward_state_controller:
+    ros__parameters:
+      # CORREÇÃO: Removemos as juntas do braço daqui para evitar conflito
+      joints:
+        - front_left_hip_x
+        - front_left_hip_y
+        - front_left_knee
+        - front_right_hip_x
+        - front_right_hip_y
+        - front_right_knee
+        - rear_left_hip_x
+        - rear_left_hip_y
+        - rear_left_knee
+        - rear_right_hip_x
+        - rear_right_hip_y
+        - rear_right_knee
+        - arm_f1x
+      interface_names:
         - position
         - velocity
-      state_publish_rate: 50.0
-      action_monitor_rate: 20.0
-      allow_partial_joints_goal: false
-      constraints:
-        stopped_velocity_tolerance: 0.01
-        goal_time: 0.6
-        arm_f1x:
-          trajectory: 0.05
-          goal: 0.05
+        - effort
+
+  spot_joint_controller:
+    ros__parameters:
+      joints:
+        - front_left_hip_x
+        - front_left_hip_y
+        - front_left_knee
+        - front_right_hip_x
+        - front_right_hip_y
+        - front_right_knee
+        - rear_left_hip_x
+        - rear_left_hip_y
+        - rear_left_knee
+        - rear_right_hip_x
+        - rear_right_hip_y
+        - rear_right_knee
+        - arm_sh0
+        - arm_sh1
+        - arm_el0
+        - arm_el1
+        - arm_wr0
+        - arm_wr1
+        - arm_f1x
