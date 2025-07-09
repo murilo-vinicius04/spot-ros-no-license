@@ -17,7 +17,8 @@ def generate_launch_description():
             mappings={
                 "arm": "true",
                 "add_ros2_control_tag": "true",
-                "hardware_interface_type": "mock"  # ou "robot" se tiver com o Spot real
+                "hardware_interface_type": "mock",
+                "mock_arm": "true"  # ativa o braço no modo mock
             }
         )
         .trajectory_execution(file_path="config/moveit_controllers.yaml")
