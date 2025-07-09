@@ -33,7 +33,7 @@ def generate_launch_description():
 
                 # 2.1) Estimador de pose (Python module)
                 ExecuteProcess(
-                    cmd=['python3', '-m', 'arm_pose_estimator.realsense_pose_node'],
+                    cmd=['python3', '-m', 'arm_pose_estimator.arm_pose_estimator'],
                     output='screen'
                 ),
 
