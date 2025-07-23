@@ -1,0 +1,37 @@
+spot_operation_core:
+  ros__parameters:
+    # Configurações do robô Spot
+    robot:
+      hostname: "192.168.80.3"  # IP do Spot
+      username: "admin"
+      password: ""
+      port: 443
+      timeout: 10.0
+    
+    # Configurações de TF
+    tf:
+      base_frame: "base_link"
+      world_frame: "world"
+      camera_frame: "hand_camera_link"
+      manipulator_frame: "manipulator_link"
+      publish_rate: 30.0
+    
+    # Configurações de operação
+    operation:
+      default_mode: "manual"  # manual, autonomous, manipulation
+      safety_timeout: 30.0
+      max_velocity: 0.5
+      max_acceleration: 0.3
+    
+    # Configurações de logging
+    logging:
+      level: "INFO"  # DEBUG, INFO, WARN, ERROR
+      enable_file_logging: true
+      log_directory: "/tmp/spot_operation_logs"
+    
+    # Configurações de rede
+    network:
+      enable_lease: true
+      lease_timeout: 30.0
+      enable_estop: true
+      estop_timeout: 5.0 

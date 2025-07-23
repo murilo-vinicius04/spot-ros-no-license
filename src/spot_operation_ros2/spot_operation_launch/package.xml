@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>spot_operation_launch</name>
+  <version>0.0.0</version>
+  <description>Arquivos de launch principais para operação do Spot</description>
+  <maintainer email="user@example.com">User</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+  <depend>spot_operation_core</depend>
+  <depend>spot_operation_vision</depend>
+  <depend>spot_operation_grasp</depend>
+  <depend>spot_operation_control</depend>
+  <depend>spot_operation_gesture</depend>
+  <depend>spot_operation_msgs</depend>
+  <depend>spot_msgs</depend>
+
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package> 

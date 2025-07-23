@@ -1,0 +1,12 @@
+# Goal
+string strategy_name
+geometry_msgs/PoseStamped target_pose
+---
+# Result
+bool success
+string message
+spot_operation_msgs/GraspResult result
+---
+# Feedback
+float32 progress
+string current_step 
