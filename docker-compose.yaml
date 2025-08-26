@@ -6,24 +6,40 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ./config/fastdds_no_shm_profile.xml:/home/spot_ws/fastdds_profile.xml
     working_dir: /home/spot_ws
+    runtime: nvidia
     environment:
       - SPOT_NAME=${SPOT_NAME:-Spot}
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
-      - ROS_DOMAIN_ID=42
+      - ROS_DOMAIN_ID=0
       - HOME=/home/spot_ws
       - USER=root
       - FASTRTPS_DEFAULT_PROFILES_FILE=/home/spot_ws/fastdds_profile.xml
       - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
     command: >
       bash -c "
-        source /opt/ros/humble/setup.bash && 
-        echo '🎉 Container pronto! Executando comandos manualmente...' &&
+        cd /ros_ws &&
+        source /opt/ros/humble/setup.bash &&
+        rosdep install --from-paths src --ignore-src -y -r &&
+        colcon build --symlink-install &&
+        source install/setup.bash &&
+        echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc &&
+        echo 'source /ros_ws/install/setup.bash' >> ~/.bashrc &&
+        echo '🎉 Container pronto! ROS_DOMAIN_ID: 0' &&
         exec bash
       "
     stdin_open: true
     tty: true
     network_mode: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   zed:
     build:
@@ -33,7 +49,7 @@ services:
     environment:
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
-      - ROS_DOMAIN_ID=42
+      - ROS_DOMAIN_ID=0
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
       - FASTRTPS_DEFAULT_PROFILES_FILE=/home/spot_ws/fastdds_profile.xml
@@ -48,7 +64,6 @@ services:
     privileged: true
     tty: true
     stdin_open: true
-    runtime: nvidia
     deploy:
       resources:
         reservations:
@@ -58,10 +73,83 @@ services:
               capabilities: [gpu]
     command: >
       bash -c "
-        bash /root/install_zed_wrapper.sh
-        cd /root/zed_workspace
-        source install/setup.bash
-        source /opt/ros/humble/setup.bash
-        echo '🎥 Iniciando ZED Camera...'
-        exec ros2 launch zed_wrapper zed_camera.launch.py camera_model:=zed2i
+        bash /root/install_zed_wrapper.sh &&
+        cd /root/zed_workspace &&
+        source install/setup.bash &&
+        source /opt/ros/humble/setup.bash &&
+        echo '🎥 Iniciando ZED Camera...' &&
+        exec bash
+      "
+
+  isaac-sim:
+    build:
+      context: .
+      dockerfile: Dockerfile.isaac
+    runtime: nvidia
+    network_mode: host
+    privileged: true
+    environment:
+      - ACCEPT_EULA=Y
+      - PRIVACY_CONSENT=Y
+      - ROS_DOMAIN_ID=0
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      # GUI (comente se for headless)
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - __NGX_CONF_FILE=/usr/share/nvidia/nvidia-ngx-conf.json
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw  # GUI
+      - ./isaac/apps:/workspace/apps
+      - ./isaac/assets:/workspace/assets
+      # caches (pra carregar + rápido)
+      - ./isaac/cache/kit:/isaac-sim/kit/cache:rw
+      - ./isaac/cache/ov:/root/.cache/ov:rw
+      - ./isaac/cache/pip:/root/.cache/pip:rw
+      - ./isaac/cache/glcache:/root/.cache/nvidia/GLCache:rw
+      - ./isaac/cache/computecache:/root/.nv/ComputeCache:rw
+
+      # 🔥 NGX injection
+      - /usr/bin/nvidia-ngx-updater:/usr/bin/nvidia-ngx-updater:ro
+      - /lib/x86_64-linux-gnu/libnvidia-ngx.so.1:/usr/lib/x86_64-linux-gnu/libnvidia-ngx.so.1:ro
+      - /usr/share/nvidia/ngx:/usr/share/nvidia/ngx
+      - /usr/share/nvidia/nvidia-ngx-conf.json:/usr/share/nvidia/nvidia-ngx-conf.json:ro
+      
+      # Força as libs de vídeo do host dentro do container:
+      - /lib/x86_64-linux-gnu/libnvcuvid.so.1:/usr/lib/x86_64-linux-gnu/libnvcuvid.so.1:ro
+      - /lib/x86_64-linux-gnu/libnvcuvid.so:/usr/lib/x86_64-linux-gnu/libnvcuvid.so:ro
+      - /lib/x86_64-linux-gnu/libnvidia-encode.so.1:/usr/lib/x86_64-linux-gnu/libnvidia-encode.so.1:ro
+      - /lib/x86_64-linux-gnu/libnvidia-encode.so:/usr/lib/x86_64-linux-gnu/libnvidia-encode.so:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, compute, graphics, utility]
+
+  realsense:
+    build:
+      context: .
+      dockerfile: Dockerfile.realsense
+    container_name: realsense-container
+    network_mode: host
+    privileged: true
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - /dev:/dev
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - .:/home/realsense_ws
+    environment:
+      - DISPLAY=${DISPLAY}
+      - ROS_DOMAIN_ID=0
+    tty: true
+    stdin_open: true
+    command: >
+      bash -lc "
+        source /opt/ros/humble/setup.bash &&
+        echo '🎥 Iniciando RealSense D455...' &&
+        exec ros2 launch realsense2_camera rs_launch.py align_depth.enable:=true pointcloud.enable:=true enable_sync:=true
       "

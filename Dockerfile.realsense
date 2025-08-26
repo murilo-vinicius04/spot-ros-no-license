@@ -1,0 +1,24 @@
+# Dockerfile.realsense
+FROM ros:humble-perception
+SHELL ["/bin/bash","-lc"]
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Add Intel RealSense repository
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    && curl -sSf https://librealsense.intel.com/Debian/librealsense.pgp | apt-key add - \
+    && echo "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" > /etc/apt/sources.list.d/librealsense.list \
+    && apt-get update \
+    && rm -rf /var/lib/apt/lists/*
+
+# SDK + wrapper ROS2
+RUN apt-get update && apt-get install -y \
+    udev usbutils \
+    librealsense2-utils librealsense2-dev librealsense2-dbg \
+    ros-${ROS_DISTRO}-realsense2-camera ros-${ROS_DISTRO}-realsense2-description \
+ && rm -rf /var/lib/apt/lists/*
+
+# Ambiente ROS
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /etc/bash.bashrc
+CMD ["/bin/bash"]

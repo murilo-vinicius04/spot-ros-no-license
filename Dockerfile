@@ -39,15 +39,21 @@ RUN apt-get update -q && \
     python3-rosdep \
     libpython3-dev \
     python3-tk \
-    ros-humble-ros-base \
+    python3-typing-extensions \
+    python3-pytest-cov \
+    python3-protobuf \
+    ros-humble-desktop \
     ros-dev-tools \
-    # MoveIt and Gazebo dependencies
-    ros-humble-moveit \
-    ros-humble-moveit-setup-assistant \
-    ros-humble-moveit-servo \
-    ros-humble-moveit-visual-tools \
-    ros-humble-gazebo-ros-pkgs \
-    ros-humble-gazebo-ros2-control \
+    # RTAB-Map packages
+    ros-humble-rtabmap-ros \
+    ros-humble-octomap-server \
+    # Controller packages
+    ros-humble-ros2-control \
+    ros-humble-ros2-controllers \
+    ros-humble-controller-manager \
+    ros-humble-controller-interface \
+    ros-humble-hardware-interface \
+    ros-humble-forward-command-controller \
     #check if Zenoh should be installed
     $(if [ "$EXPERIMENTAL_ZENOH_RMW" = "TRUE" ]; then echo "ros-humble-rmw-zenoh-cpp"; fi) \
     && rm -rf /var/lib/apt/lists/*
@@ -55,12 +61,30 @@ RUN apt-get update -q && \
 # Set up workspace
 WORKDIR /ros_ws/src
 
-# Initialize rosdep
-RUN rosdep init && rosdep update
+# Initialize rosdep (only if not already initialized)
+RUN if [ ! -d "/etc/ros/rosdep/sources.list.d" ] || [ -z "$(ls -A /etc/ros/rosdep/sources.list.d/*.list 2>/dev/null)" ]; then \
+        rosdep init; \
+    fi && \
+    rosdep update
 
 # Clone driver code
 RUN git clone https://github.com/bdaiinstitute/spot_ros2.git .
 RUN git submodule update --init --recursive
+
+# Install additional dependencies that might be missing
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    python3-dev \
+    python3-numpy \
+    build-essential \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
+
+# Source ROS and install dependencies with rosdep (ignore failures for now)
+RUN . /opt/ros/humble/setup.sh && \
+    rosdep install --from-paths . --ignore-src -y -r --rosdistro=humble || true
 
 # Run install script and pass in the architecture
 RUN ARCH=$(dpkg --print-architecture) && echo "Building driver with $ARCH" && /ros_ws/src/install_spot_ros2.sh --$ARCH
@@ -76,9 +100,17 @@ RUN mkdir -p /home/spot_ws
 # Set working directory
 WORKDIR /home/spot_ws
 
-# Set environment variables
+# Set environment variables for ROS Domain ID and other configs
 ENV HOME=/home/spot_ws
 ENV USER=root
+ENV ROS_DOMAIN_ID=0
+ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+ENV FASTRTPS_DEFAULT_PROFILES_FILE=/home/spot_ws/fastdds_profile.xml
+
+# Create bashrc with ROS setup
+RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc && \
+    echo 'source /ros_ws/install/setup.bash' >> /root/.bashrc && \
+    echo 'export ROS_DOMAIN_ID=0' >> /root/.bashrc
 
 # Set default command
 CMD ["/bin/bash"]
